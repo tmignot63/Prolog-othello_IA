@@ -34,18 +34,15 @@ init :-
 %%if a player cannot make a valide move, he pass his turn and the opponent continues
 play(_) :- gameover(Winner), !, writeln('Game is over.'), displayBoard.
 play(Player) :- board(Board), canMakeAMove(Board,Player) , format('New turn for : ~w ~n',[Player]), displayBoard, 
-				ia(Board,Move,Player), playMove(Board,Move,NewBoard,Player),applyIt(Board,NewBoard),switchPlayer(Player,NextPlayer), play(NextPlayer).
+				ia(Board,Player,Move), playMove(Board,Move,Player,NewBoard),applyIt(Board,NewBoard),switchPlayer(Player,NextPlayer), play(NextPlayer).
 play(Player) :- format('Player "~w" can not play.~n',[Player]), changePlayer(Player,NextPlayer), play(NextPlayer).
 
 %Check if a move is still available for the player
-%%TODO : all (find validMove then stop before backtrack)
+%%TODO : all (find one validMove then stop before backtrack)
 canMakeAMove(Board,Player) :- 1==2.
 
-%Check if a the position is near an opposite disk
-isAdjacent(Board, Player, Index) :- 1==2.
-
 %Get all valid moves for a player
-allValidMoves(Board, Player, Liste) :- findAll(X, isValid(Board,Player,X), Liste).
+allValidMoves(Board, Player, List) :- findAll(X, isValid(Board,Player,X), List).
 
 %Check if a move is valid
 isValid(Board,Player,Index) :- 
@@ -67,15 +64,8 @@ emptyCell(Board,Index) :- nth0(Index,Board,X), var(X).
 %TODO :
 isSandwich(Board,Player,direction) :- 1==2
 
-
-
-%Implement IA
-%%TODO : Different algorithm
-ia(Board,Move,Player) :- 1==2.
-
 %Play a regular move
-%%TODO : ADD THE DISK AND FLIP THE OTHER
-playMove(Board, Move, NewBoard, Player) :- nth0(Move,Board,Player), flipper(Board,Move,Player,List), majBoard(Board,Player,List,NewBoard).
+playMove(Board, Move, Player, NewBoard) :- nth0(Move,Board,Player), flipper(Board,Move,Player,List), majBoard(Board,Player,List,NewBoard).
 
 %Get the list of all flipped disk
 flipper(Board,Move,Player,List) :- 
@@ -90,12 +80,17 @@ flipper(Board,Move,Player,List) :-
 	append([L1,L2,L3,L4,L5,L6,L7,L8],List).
 
 
-%Try to Flip in a precise direction
+%Try to Flip in a precise direction, give the flipped disk index (list)
 %TODO
-flip(Board,Move,Player,direction, NewBoard) :- 1==2.
+flip(Board,Move,Player,direction,List) :- 1==2.
 
-%Maj the board with the flipped disk
-majBoard(Board,Player,List,NewBoard) :- 1==2.
+%Maj the board with by flipping the disk in the list
+majBoard(Board,Player,[],NewBoard) :- NewBoard = Board.
+majBoard(Board,Player,[H|T],NewBoard) :- nth0(H,Board,Player), majBoard(Board,Player,[T],NewBoard).
+
+%Implement IA
+%%TODO : Different algorithm, here is a random move from the list
+ia(Board,Player, Move) :- allValidMoves(Board,Player,List), length(List,Length), random(0,Length, Index), nth0(Index,List,Move).
 
 %Save the new board and remove the old one from the knowledge base
 applyIt(Board,NewBoard) :- 
@@ -105,7 +100,6 @@ applyIt(Board,NewBoard) :-
 %Switch player
 switchPlayer('b','w').
 switchPlayer('w','b').
-
 
 %End of the game
 %%When it is no longer possible for either player to move, the game is over.
