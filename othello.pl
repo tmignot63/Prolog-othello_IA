@@ -32,37 +32,57 @@ init :-
 %%If you cant outflank and flip at least one opposing disc, you must pass 
 %%your turn. However, if a move is available to you, you cant forfeit your turn.
 %%if a player cannot make a valide move, he pass his turn and the opponent continues
-play(_) :- gameover(Winner), !, writeln('Game is over.'), displayBoard.
+play(_) :- gameover(Winner), !, format('Game is over, the winner is ~w ~n',[Winner]), displayBoard.
 play(Player) :- board(Board), canMakeAMove(Board,Player) , format('New turn for : ~w ~n',[Player]), displayBoard, 
 				ia(Board,Player,Move), playMove(Board,Move,Player,NewBoard),applyIt(Board,NewBoard),switchPlayer(Player,NextPlayer), play(NextPlayer).
-play(Player) :- format('Player "~w" can not play.~n',[Player]), changePlayer(Player,NextPlayer), play(NextPlayer).
+play(Player) :- format('Player "~w" can not play.~n',[Player]), switchPlayer(Player,NextPlayer), play(NextPlayer).
 
 %Check if a move is still available for the player
-%%TODO : all (find one validMove then stop before backtrack)
-canMakeAMove(Board,Player) :- 1==2.
+%%find one valid move then stop backtrack
+canMakeAMove(Board,Player) :- isValid(Board,Player,_), !.
 
 %Get all valid moves for a player
-allValidMoves(Board, Player, List) :- findAll(X, isValid(Board,Player,X), List).
+allValidMoves(Board, Player, List) :- findall(X, isValid(Board,Player,X), List).
 
 %Check if a move is valid
 isValid(Board,Player,Index) :- 
 	emptyCell(Board,Index),
-	(isSandwich(Board,Player,top);
-	isSandwich(Board,Player,down);
-	isSandwich(Board,Player,left);
-	isSandwich(Board,Player,right);
-	isSandwich(Board,Player,diagNW);
-	isSandwich(Board,Player,diagNE);
-	isSandwich(Board,Player,diagSE);
-	isSandwich(Board,Player,diagSW)).
+	(isSandwich(Board,Player,Index,top);
+	isSandwich(Board,Player,Index,down);
+	isSandwich(Board,Player,Index,left);
+	isSandwich(Board,Player,Index,right);
+	isSandwich(Board,Player,Index,diagNW);
+	isSandwich(Board,Player,Index,diagNE);
+	isSandwich(Board,Player,Index,diagSE);
+	isSandwich(Board,Player,Index,diagSW)).
 
 
 %Check if a cell is empty
 emptyCell(Board,Index) :- nth0(Index,Board,X), var(X).
 
 %Check in all direction if there is a sandwich (at least one opposite disk then a player disk)
-%TODO :
-isSandwich(Board,Player,direction) :- 1==2
+isSandwich(Board,Player,Index,Direction) :- switchPlayer(Player,Opponent), listDiskInDirection(Board,Index,Direction,[],[Opponent|FinalList]), check_sandwich(Player, [FinalList]). 
+
+%List all the disk in a precise direction from the index to the last cell of the direction
+listDiskInDirection(Board,Index,Direction,List,FinalList) :- \+ nextCell(Index,Direction,_), FinalList = List.
+listDiskInDirection(Board,Index,Direction,List,FinalList) :- nextCell(Index,Direction,NextCellIndex), getDisk(Board, NextCellIndex, Disk), append(List,[Disk],NewList), listDiskInDirection(Board,NextCellIndex,Direction,NewList,FinalList). 
+
+%Get the next cell depends on the direction, false if there is no more
+nextCell(CellIndex, top, NextCellIndex) :- NextCellIndex is CellIndex-8, NextCellIndex > -1.
+nextCell(CellIndex, down, NextCellIndex) :- NextCellIndex is CellIndex+8, NextCellIndex < 64.
+nextCell(CellIndex, left, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 0, NextCellIndex is CellIndex-1, NextCellIndex > -1.
+nextCell(CellIndex, right, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 7, NextCellIndex is CellIndex+1, NextCellIndex < 64.
+nextCell(CellIndex, diagNW, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 0, NextCellIndex is CellIndex-9, NextCellIndex > -1.
+nextCell(CellIndex, diagNE, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 7, NextCellIndex is CellIndex-7, NextCellIndex > -1.
+nextCell(CellIndex, diagSE, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 7, NextCellIndex is CellIndex+9, NextCellIndex < 64.
+nextCell(CellIndex, diagSW, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 0, NextCellIndex is CellIndex+7, NextCellIndex < 64.
+
+%Get the disk at a precise index if non empty
+getDisk(Board, Index, Disk) :- nth0(Index, Board, Disk).
+
+%Check if its a sandwich or not
+%TODO : on sait déjà qu il y a un pion adverse adjacent dans cette direction, on verifie ensuite si a un moment on retrouve un pion du joueur
+check_sandwich(Player, List) :- 1==2.
 
 %Play a regular move
 playMove(Board, Move, Player, NewBoard) :- nth0(Move,Board,Player), flipper(Board,Move,Player,List), majBoard(Board,Player,List,NewBoard).
@@ -85,8 +105,12 @@ flipper(Board,Move,Player,List) :-
 flip(Board,Move,Player,direction,List) :- 1==2.
 
 %Maj the board with by flipping the disk in the list
-majBoard(Board,Player,[],NewBoard) :- NewBoard = Board.
-majBoard(Board,Player,[H|T],NewBoard) :- nth0(H,Board,Player), majBoard(Board,Player,[T],NewBoard).
+majBoard(Board,_,[],NewBoard) :- NewBoard = Board.
+majBoard(Board,Player,[H|T],NewBoard) :- replace(Board,H,Player,BoardUpdated), majBoard(BoardUpdated,Player,T,NewBoard).
+
+%Replace an element at a given index to another element
+replace([_|T], 0, X, [X|T]).
+replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
 
 %Implement IA
 %%TODO : Different algorithm, here is a random move from the list
@@ -106,11 +130,11 @@ switchPlayer('w','b').
 %%The discs are now counted and the player with the majority of his or her color 
 %%discs on the board is the winner.
 %%A tie is possible.
-gameover(Winner) :- board(Board), \+ moveAvailable(Board,P), findWinner(Board,Winner).
+gameover(Winner) :- board(Board), \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,Winner).
 
 %Find the winner
 findWinner(Board, Winner):- countDisk(Board,0,0,B,W), selectWinner(B,W,Winner),
-	format('~w black disks against ~w white disks.~nThe winner is player ~w !~n',[B,W,Winner]).
+	format('~w black disks against ~w white disks.~n',[B,W]).
 	
 %Count the number of disk for each player B and W
 countDisk([],B,W,FinalB,FinalW) :- FinalB is B, FinalW is W.
