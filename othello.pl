@@ -34,7 +34,7 @@ init :-
 %%if a player cannot make a valide move, he pass his turn and the opponent continues
 play(_) :- gameover(Winner), !, format('Game is over, the winner is ~w ~n',[Winner]), displayBoard.
 play(Player) :- board(Board), canMakeAMove(Board,Player) , format('New turn for : ~w ~n',[Player]), displayBoard, 
-				ia(Board,Player,Move), playMove(Board,Move,Player,NewBoard),applyIt(Board,NewBoard),switchPlayer(Player,NextPlayer), play(NextPlayer).
+				ia(Board,Player,Move), playMove(Board,Move,Player,NewBoard), applyIt(Board,NewBoard), switchPlayer(Player,NextPlayer), play(NextPlayer).
 play(Player) :- format('Player "~w" can not play.~n',[Player]), switchPlayer(Player,NextPlayer), play(NextPlayer).
 
 %Check if a move is still available for the player
@@ -63,63 +63,65 @@ emptyCell(Board,Index) :- nth0(Index,Board,X), var(X).
 isSandwich(Board,Player,Index,Direction) :- switchPlayer(Player,Opponent), listDiskInDirection(Board,Index,Direction,[],[Opponent|FinalList]), check_sandwich(Player, FinalList). 
 
 %List all the disk in a precise direction from the index to the last cell of the direction
-listDiskInDirection(Board,Index,Direction,List,FinalList) :- \+ nextCell(Index,Direction,_), FinalList = List.
+listDiskInDirection(_,Index,Direction,List,FinalList) :- \+ nextCell(Index,Direction,_), !, FinalList = List.
 listDiskInDirection(Board,Index,Direction,List,FinalList) :- nextCell(Index,Direction,NextCellIndex), getDisk(Board, NextCellIndex, Disk), append(List,[Disk],NewList), listDiskInDirection(Board,NextCellIndex,Direction,NewList,FinalList). 
 
 %Get the next cell depends on the direction, false if there is no more
 nextCell(CellIndex, top, NextCellIndex) :- NextCellIndex is CellIndex-8, NextCellIndex > -1.
 nextCell(CellIndex, down, NextCellIndex) :- NextCellIndex is CellIndex+8, NextCellIndex < 64.
-nextCell(CellIndex, left, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 0, NextCellIndex is CellIndex-1, NextCellIndex > -1.
-nextCell(CellIndex, right, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 7, NextCellIndex is CellIndex+1, NextCellIndex < 64.
-nextCell(CellIndex, diagNW, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 0, NextCellIndex is CellIndex-9, NextCellIndex > -1.
-nextCell(CellIndex, diagNE, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 7, NextCellIndex is CellIndex-7, NextCellIndex > -1.
-nextCell(CellIndex, diagSE, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 7, NextCellIndex is CellIndex+9, NextCellIndex < 64.
-nextCell(CellIndex, diagSW, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 0, NextCellIndex is CellIndex+7, NextCellIndex < 64.
+nextCell(CellIndex, left, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 0, NextCellIndex is CellIndex-1.
+nextCell(CellIndex, right, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 7, NextCellIndex is CellIndex+1.
+nextCell(CellIndex, diagNW, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 0, X is CellIndex-9, X > -1, NextCellIndex is CellIndex-9.
+nextCell(CellIndex, diagNE, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 7, X is CellIndex-7, X > -1, NextCellIndex is CellIndex-7.
+nextCell(CellIndex, diagSE, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 7, X is CellIndex+9, X < 64, NextCellIndex is CellIndex+9.
+nextCell(CellIndex, diagSW, NextCellIndex) :- Mod is CellIndex mod 8, Mod =\= 0, X is CellIndex+7, X < 64, NextCellIndex is CellIndex+7.
 
 %Get the disk at a precise index
 getDisk(Board, Index, Disk) :- nth0(Index, Board, Disk).
 
 %Check if its a sandwich or not
-check_sandwich(Player, []) :- !, fail.
-check_sandwich(Player, [H|_]) :- var(H), !, fail.
+check_sandwich(_, []) :- !, fail.
+check_sandwich(_, [H|_]) :- var(H), !, fail.
 check_sandwich(Player, [H|_]) :- H == Player.
-check_sandwich(Player, [H|T]) :- H \== Player, check_sandwich(Player,T). 
+check_sandwich(Player, [H|T]) :- H \== Player, check_sandwich(Player,T).
 
 %Play a regular move
 playMove(Board, Move, Player, NewBoard) :- nth0(Move,Board,Player), flipAll(Board,Move,Player,List), majBoard(Board,Player,List,NewBoard).
 
 %Get the list of all flipped disk
 flipAll(Board,Move,Player,List) :- 
-	flip(Board,Move,Player,top,[],L1),
-	flip(Board,Move,Player,down,[],L2),
-	flip(Board,Move,Player,left,[],L3),
-	flip(Board,Move,Player,right,[],L4),
-	flip(Board,Move,Player,diagNW,[],L5),
-	flip(Board,Move,Player,diagNE,[],L6),
-	flip(Board,Move,Player,diagSE,[],L7),
-	flip(Board,Move,Player,diagSW,[],L8),
-	append([L1,L2,L3,L4,L5,L6,L7,L8],List).
-
+	flip(Board,Move,Player,top,L1),
+	flip(Board,Move,Player,down,L2),
+	flip(Board,Move,Player,left,L3),
+	flip(Board,Move,Player,right,L4),
+	flip(Board,Move,Player,diagNE,L5),
+	flip(Board,Move,Player,diagNW,L6),
+	flip(Board,Move,Player,diagSE,L7),
+	flip(Board,Move,Player,diagSW,L8),
+	append([L1,L2,L3,L4,L5,L6,L7,L8],List),!.
 
 %Try to Flip in a precise direction, give the flipped disk index (FinalList)
-%TODO : garder en mémoire tous les indices à retourner
-flip(Board,Move,Player,Direction,List,FinalList) :- 
+flip(Board,Move,Player,Direction,FinalList) :- 
 	switchPlayer(Player,Opponent), 
 	listDiskInDirection(Board,Move,Direction,[],[Opponent|DiskList]), 
-	check_sandwich(Player, DiskList),
-	countAlignedDisk(Player, DiskList, 0, FinalValue), 
-	flipNDisk(Move, Direction, FinalValue, [], FinalList).
+	checkSandwichEmptyList(Player, DiskList, List),
+	(\+ member(_,List) -> FinalList = [] ; countAlignedDisk(Player, DiskList, 1, FinalValue), flipNDisk(Move, Direction, FinalValue, [], FinalList)).
 
 %Count the number of aligned disk (of the same color) on the list
-countAlignedDisk(Player, DiskList, Value, FinalValue)
-countAlignedDisk(Player,[], Value, FinalValue) :- FinalValue is Value, !.
-countAlignedDisk(Player,[H|_], Value, FinalValue) :- var(H), FinalValue is Value, !.
+countAlignedDisk(_,[], Value, FinalValue) :- FinalValue is Value, !.
+countAlignedDisk(_,[H|_], Value, FinalValue) :- var(H), FinalValue is Value, !.
 countAlignedDisk(Player,[H|_], Value, FinalValue) :- H == Player, FinalValue is Value, !.
 countAlignedDisk(Player, [H|T], Value, FinalValue) :- H \== Player, X is Value+1, countAlignedDisk(Player, T, X, FinalValue).
 
 %Give the index list of n disk in a precise direction
-flipNDisk(Index, Direction, 0, List, FinalList) :- FinalList = List, !.
+flipNDisk(_, _, 0, List, FinalList) :- FinalList = List, !.
 flipNDisk(Index, Direction, N, List, FinalList) :- nextCell(Index, Direction, NextCellIndex), N1 is N-1, append(List, [NextCellIndex], NewList), flipNDisk(NextCellIndex, Direction, N1, NewList, FinalList).
+
+%Check sandwich which return an empty list if false
+checkSandwichEmptyList(_, [], List) :- !, List = [].
+checkSandwichEmptyList(_, [H|_], List) :- var(H), !, List = [].
+checkSandwichEmptyList(Player, [H|_], List) :- H == Player, List = [true].
+checkSandwichEmptyList(Player, [H|T], List) :- H \== Player, checkSandwichEmptyList(Player,T, List).
 
 %Maj the board with by flipping the disk in the list
 majBoard(Board,_,[],NewBoard) :- NewBoard = Board, !.
