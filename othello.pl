@@ -45,7 +45,7 @@ play(Player) :- format('Player "~w" can not play.~n',[Player]), switchPlayer(Pla
 canMakeAMove(Board,Player) :- setof(X, isValid(Board,Player,X), List), member(_,List).
 
 %Get all valid moves for a player
-allValidMoves(Board, Player, List) :- setof(X, isValid(Board,Player,X), List).
+allValidMoves(Board, Player, List) :- setof(X, isValid(Board,Player,X), List), writeln('Available Moves : '),writeln(List).
 
 %Check if a move is valid
 isValid(Board,Player,Index) :- 
@@ -106,8 +106,9 @@ flipAll(Board,Move,Player,List) :-
 %Try to Flip in a precise direction, give the flipped disk index (FinalList)
 flip(Board,Move,Player,Direction,FinalList) :- 
 	switchPlayer(Player,Opponent), 
-	listDiskInDirection(Board,Move,Direction,[],[H|DiskList]), 
-	(\+ H==Opponent -> FinalList = [] ;
+	listDiskInDirection(Board,Move,Direction,[],CompleteDiskList),
+	((\+(member(_,CompleteDiskList)) ; [H|_] = CompleteDiskList, \+(H==Opponent)) -> FinalList = [] ;
+	[_|DiskList] = CompleteDiskList,
 	checkSandwichEmptyList(Player, DiskList, List), (\+ member(_,List) -> FinalList = [] ;
 	countAlignedDisk(Player, DiskList, 1, FinalValue), flipNDisk(Move, Direction, FinalValue, [], FinalList))).
 
@@ -137,7 +138,7 @@ replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
 
 %Implement IA
 %%TODO : Different algorithm, here is a random move from the list
-ia(Board,Player, Move) :- allValidMoves(Board,Player,List), length(List,Length), random(0,Length, Index), nth0(Index,List,Move), format('IA plays move number ~w ~n',[Move]).
+ia(Board,Player, Move) :- allValidMoves(Board,Player,List), length(List,Length), random(0,Length, Index), nth0(Index,List,Move), format('IA plays move number ~w ~n',[Move]),!.
 
 %Save the new board and remove the old one from the knowledge base
 applyIt(Board,NewBoard) :- 
