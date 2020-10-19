@@ -18,6 +18,7 @@
 :- retractall(board(_)).
 
 init :- 
+	retractall(board(_)),
 	length(Board,64),
 	nth0(27,Board,'w'),
 	nth0(28,Board,'b'),
@@ -25,21 +26,23 @@ init :-
 	nth0(36,Board,'w'),
 	assertz(board(Board)),
 	writeln('Initialisation du board OK'),
-	displayBoard.
+	displayBoard,
+	play('b').
 
 %Playing turn
 %%if there is no winner, we made a normal turn for the next player
 %%If you cant outflank and flip at least one opposing disc, you must pass 
 %%your turn. However, if a move is available to you, you cant forfeit your turn.
 %%if a player cannot make a valide move, he pass his turn and the opponent continues
-play(_) :- gameover(Winner), !, format('Game is over, the winner is ~w ~n',[Winner]), displayBoard.
-play(Player) :- board(Board), canMakeAMove(Board,Player) , format('New turn for : ~w ~n',[Player]), displayBoard, 
+play(_) :- sleep(1), gameover(Winner), !, format('Game is over, the winner is ~w ~n',[Winner]), displayBoard.
+play(Player) :- board(Board), canMakeAMove(Board,Player), format('New turn for : ~w ~n',[Player]), displayBoard, 
 				ia(Board,Player,Move), playMove(Board,Move,Player,NewBoard), applyIt(Board,NewBoard), switchPlayer(Player,NextPlayer), play(NextPlayer).
 play(Player) :- format('Player "~w" can not play.~n',[Player]), switchPlayer(Player,NextPlayer), play(NextPlayer).
 
 %Check if a move is still available for the player
 %%find one valid move then stop backtrack
-canMakeAMove(Board,Player) :- isValid(Board,Player,_), !.
+%TODO : IMPROVE PERF
+canMakeAMove(Board,Player) :- setof(X, isValid(Board,Player,X), List), member(_,List).
 
 %Get all valid moves for a player
 allValidMoves(Board, Player, List) :- setof(X, isValid(Board,Player,X), List).
@@ -86,7 +89,7 @@ check_sandwich(Player, [H|_]) :- H == Player.
 check_sandwich(Player, [H|T]) :- H \== Player, check_sandwich(Player,T).
 
 %Play a regular move
-playMove(Board, Move, Player, NewBoard) :- nth0(Move,Board,Player), flipAll(Board,Move,Player,List), majBoard(Board,Player,List,NewBoard).
+playMove(Board, Move, Player, NewBoard) :- nth0(Move,Board,Player), flipAll(Board,Move,Player,List), writeln('Liste a remplacer depuis flipAll :'),writeln(List),majBoard(Board,Player,List,NewBoard).
 
 %Get the list of all flipped disk
 flipAll(Board,Move,Player,List) :- 
@@ -103,9 +106,10 @@ flipAll(Board,Move,Player,List) :-
 %Try to Flip in a precise direction, give the flipped disk index (FinalList)
 flip(Board,Move,Player,Direction,FinalList) :- 
 	switchPlayer(Player,Opponent), 
-	listDiskInDirection(Board,Move,Direction,[],[Opponent|DiskList]), 
-	checkSandwichEmptyList(Player, DiskList, List),
-	(\+ member(_,List) -> FinalList = [] ; countAlignedDisk(Player, DiskList, 1, FinalValue), flipNDisk(Move, Direction, FinalValue, [], FinalList)).
+	listDiskInDirection(Board,Move,Direction,[],[H|DiskList]), 
+	(\+ H==Opponent -> FinalList = [] ;
+	checkSandwichEmptyList(Player, DiskList, List), (\+ member(_,List) -> FinalList = [] ;
+	countAlignedDisk(Player, DiskList, 1, FinalValue), flipNDisk(Move, Direction, FinalValue, [], FinalList))).
 
 %Count the number of aligned disk (of the same color) on the list
 countAlignedDisk(_,[], Value, FinalValue) :- FinalValue is Value, !.
@@ -133,7 +137,7 @@ replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
 
 %Implement IA
 %%TODO : Different algorithm, here is a random move from the list
-ia(Board,Player, Move) :- allValidMoves(Board,Player,List), length(List,Length), random(0,Length, Index), nth0(Index,List,Move).
+ia(Board,Player, Move) :- allValidMoves(Board,Player,List), length(List,Length), random(0,Length, Index), nth0(Index,List,Move), format('IA plays move number ~w ~n',[Move]).
 
 %Save the new board and remove the old one from the knowledge base
 applyIt(Board,NewBoard) :- 
