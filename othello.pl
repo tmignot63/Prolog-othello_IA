@@ -5,6 +5,7 @@
 %%%%%%%%%%%%%%%%%%
 
 %Rules : https://www.ultraboardgames.com/othello/game-rules.php
+%Heuristics : https://courses.cs.washington.edu/courses/cse573/04au/Project/mini1/RUSSIA/Final_Paper.pdf
 
 %Objective : The goal is to get the majority of colour disks on the board at the end of the game.
 
@@ -16,6 +17,8 @@
 :- writeln('Bienvenue sur Prolog_Othello-IA !').
 :- dynamic(board/1).
 :- retractall(board(_)).
+:- writeln('Chargement des Heuristics : ').
+:- [heuristic_cornersCaptured].
 
 init :- 
 	retractall(board(_)),
