@@ -2,6 +2,10 @@
 % OTHELLO PROLOG %
 % BRANCHEREAU C. %
 % GRAVEY THIBAUT %
+% DE ANDRIA Q.   %
+% ROB LOUIS      %
+% MIGNOT THOMAS  %
+% OECHSLIN K.    %
 %%%%%%%%%%%%%%%%%%
 
 %Rules : https://www.ultraboardgames.com/othello/game-rules.php

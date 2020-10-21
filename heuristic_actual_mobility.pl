@@ -1,4 +1,4 @@
-% Mobility Heuristic 
+% ACTUAL MOBILITY HEURISTIC
 
 :-writeln('Mobility heuristic has loaded').
 
@@ -17,8 +17,6 @@ heuristic_actual_mobility(Board, P1, P2, H) :-
     length(ListP2,Y),
     Somme is X + Y,
     heuristic_actual_mobility_compute(X,Y,Somme,H).
-
-
 
 heuristic_actual_mobility_compute(_,_,0,H):- H is 0.
 heuristic_actual_mobility_compute(NbMoveP1,NbMoveP2,Somme,H):- H is 100 * (NbMoveP1-NbMoveP2) / Somme.

@@ -1,6 +1,6 @@
 % CORNERS CAPTURED HEURISTICS
 
-:- writeln('Corners Captured Heuristics loaded.').
+:- writeln('Corners Captured heuristic has loaded.').
 
 % P1 is the current player while P2 is the ennemy
 % Corners Captured
