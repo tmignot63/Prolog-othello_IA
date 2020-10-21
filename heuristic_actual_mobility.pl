@@ -1,11 +1,11 @@
 % Mobility Heuristic 
 
-:-writeln('mobility heuristic has loaded').
+:-writeln('Mobility heuristic has loaded').
 
 %Board le plateau actuel
-%P1 est le joueur 1, pour lequel on calcule l'heuristique: ie joueur MAX
+%P1 est le joueur 1, pour lequel on calcule lheuristique: ie joueur MAX
 %P2 est son adversaire, ie joueur MIN
-%H la valeur de l'heuristique (à passer comme variable)
+%H la valeur de lheuristique (à passer comme variable)
 
 
 heuristic_actual_mobility(Board, P1, P2, H) :- 

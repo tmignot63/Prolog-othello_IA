@@ -18,7 +18,8 @@ heuristic_cornersCaptured(Board, P1, P2, H) :-
 
 getCorners(Board, Corners) :- getCorners(Board, Corners, 0).
 getCorners([],[],64).
-getCorners([D|B], [D|C], I) :- (I==0 ; I==7 ; I==56; I==63) , J is I+1, getCorners([D|B], [D|C], J).
+getCorners([D|B], [D|C], I) :- (I==0 ; I==7 ; I==56; I==63) , J is I+1, getCorners(B, C, J).
+getCorners([D|B], C, I) :-  J is I+1, getCorners(B, C, J).
 
 countByPlayer([], P, 0).
 countByPlayer([D|C], P, NbDiskP) :- var(D), countByPlayer(C, P, NbDiskP).

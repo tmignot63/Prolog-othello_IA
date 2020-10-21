@@ -93,7 +93,7 @@ check_sandwich(Player, [H|_]) :- H == Player.
 check_sandwich(Player, [H|T]) :- H \== Player, check_sandwich(Player,T).
 
 %Play a regular move
-playMove(Board, Move, Player, NewBoard) :- nth0(Move,Board,Player), flipAll(Board,Move,Player,List), writeln('Liste a remplacer depuis flipAll :'),writeln(List),majBoard(Board,Player,List,NewBoard).
+playMove(Board, Move, Player, NewBoard) :- nth0(Move,Board,Player), flipAll(Board,Move,Player,List), writeln('Liste a remplacer depuis flipAll :'),writeln(List),majBoard(Board,Player,List,NewBoard),!.
 
 %Get the list of all flipped disk
 flipAll(Board,Move,Player,List) :- 
@@ -169,6 +169,10 @@ countDisk([],B,W,FinalB,FinalW) :- FinalB is B, FinalW is W.
 countDisk([H|T],B,W,FinalB,FinalW) :- H == 'b', X is B+1, countDisk(T,X,W,FinalB,FinalW).
 countDisk([H|T],B,W,FinalB,FinalW) :- H == 'w', Y is W+1, countDisk(T,B,Y,FinalB,FinalW).
 countDisk([_|T],B,W,FinalB,FinalW) :- countDisk(T,B,W,FinalB,FinalW).
+
+countDiskPerPlayer([],_,NbDisk,FinalNbDisk) :- FinalNbDisk is NbDisk.
+countDiskPerPlayer([H|T],Player,NbDisk,FinalNbDisk) :- H == Player, X is NbDisk+1, countDiskPerPlayer(T,Player,X,FinalNbDisk).
+countDiskPerPlayer([_|T],Player,NbDisk,FinalNbDisk) :- countDiskPerPlayer(T,Player,NbDisk,FinalNbDisk).
 
 %Select the winner depends on B and W the count of the disk
 selectWinner(B,W,Winner) :- B=:=W, Winner='Draw'.
