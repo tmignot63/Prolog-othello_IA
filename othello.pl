@@ -19,6 +19,7 @@
 :- retractall(board(_)).
 :- writeln('Chargement des Heuristics : ').
 :- [heuristic_cornersCaptured].
+:- [heuristic_potential_mobility].
 
 init :- 
 	retractall(board(_)),
