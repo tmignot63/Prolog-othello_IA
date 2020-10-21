@@ -202,3 +202,6 @@ display(Elem) :- write(Elem).
 getCopie([],[]).
 getCopie([H|T],[H1|T1]):-var(H),var(H1),H1\==H,getCopie(T,T1).
 getCopie([H1|T1],[H1|T2]):- \+(var(H1)),getCopie(T1,T2).
+
+% TEMP
+heuristic(Board,Value):- countDisk(Board,0,0,B,W), Value is B-W.
