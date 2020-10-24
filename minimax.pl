@@ -1,54 +1,88 @@
-% LIA selon la méthode minimax
-% Elle cherche les différents coups à jouer sur un coup davance donné. Puis sélectionne le chemin qui mène vers le meilleur selon lheuristique choisi.
+% MINIMAX
+% IA selon la methode minimax
+% Elle cherche les differents coups à jouer sur une profondeur donnée, puis selectionne le chemin qui mene vers le meilleur selon lheuristique choisie.
 
-minimax(Pos, Move, Depth,Player) :- minimax(Depth, Pos,Player, _, Move).
+:- writeln('Minimax has loaded.').
 
-minimax(0, Position, Player, Value, _) :- 
-      heuristic(Position,V),
-      Value is V*Player. 
+%Select the chosen heuristic
+heuristic(2, Board, Value, _, _) :- heuristic_disk_diff(Board, Value).
+heuristic(3, Board, Value, P1, P2) :- heuristic_stability(Board, P1, P2, Value).
+heuristic(4, Board, Value, P1, P2) :- heuristic_actual_mobility(Board, P1, P2, Value).
+heuristic(5, Board, Value, P1, P2) :- heuristic_coin_parity(Board, P1, P2, Value).
+heuristic(6, Board, Value, P1, P2) :- heuristic_cornersCaptured(Board, P1, P2, Value).
+heuristic(7, Board, Value, P1, P2) :- heuristic_potential_mobility(Board, P1, P2, Value).
 
-minimax(D, Position,1, Value, Move) :-
+%Launch the alpha-beta algorithm and return the best move that has been found
+alpha_beta(Pos, Move, Depth, Player) :- alpha_beta_vertical(Depth, Pos,Player, _, Move, -10000, 10000).
+
+%Vertical search for the alpha-beta algorithm : go deeper in the game tree
+alpha_beta_vertical(_, Board, Player, Value, _, _, _) :-
+      %Check if there is a winner
+      gameover(Board, Winner),
+	playerini(1, X),
+      (
+            Winner == X ->
+            Value is (5000) * Player ;
+            Value is (-5000) * Player
+      ).
+
+alpha_beta_vertical(0, Board, PlayerCoef, Value, _, _, _) :-
+      %Depth = 0
+	playerini(1, PlayerIni),
+      playerini(-1, Opponent),
+	(
+		PlayerIni == b ->
+		chooseHeuristicBlack(H) ;
+		chooseHeuristicWhite(H)
+	),
+	heuristic(H, Board, V, PlayerIni, Opponent),
+      Value is V * PlayerCoef.
+
+alpha_beta_vertical(D, Board,Player, Value, Move, Alpha, Beta) :-
       D > 0, 
       D1 is D - 1,
-      allValidMoves(Position,b,Moves),
-      minimax(Moves, Position, D1, 1, -1000, nil, Value, Move).
+      playerini(Player, PlayerIni),
+      (
+            allValidMoves(Board, PlayerIni, Moves) ->
+            alpha_beta_horizontal(Moves, Board, D1, Player, nil, Value, Move, Alpha, Beta) ;
+            alpha_beta_horizontal_vide([], Board, D1, Player, nil, Value, Move, Alpha, Beta)
+	).
 
-minimax(D, Position,-1, Value, Move) :-
-      D > 0, 
-      D1 is D - 1,
-      allValidMoves(Position,w,Moves),
-      minimax(Moves, Position, D1, -1, -1000, nil, Value, Move).
+%Horizontal search for the alpha-beta algorithm : select the best move at a given depth of the game tree
+alpha_beta_horizontal([], _, _, _, Best1, Value1, Best1, Value1, _).
 
-minimax([], _, _, _, Value, Best, Value, Best).
+alpha_beta_horizontal([Move|Moves], Board, D, Player, Move0, BestValue, BestMove, Alpha, Beta) :-
+	getCopie(Board, BoardCopie),
+	playerini(Player, PlayerIni),
+	playMove(Board, Move, PlayerIni, Board1),
+	Opponent is -Player,
+      OppAlpha is -Beta,
+      OppBeta is -Alpha,
+      alpha_beta_vertical(D, Board1, Opponent, OppValue, _OppMove, OppAlpha, OppBeta), 
+      Value is -OppValue,
+      (
+            Value >= Beta -> 
+            BestValue = Value, BestMove = Move ;
+            (
+                  Value > Alpha ->        
+                  alpha_beta_horizontal(Moves, BoardCopie, D, Player, Move, BestValue, BestMove, Value, Beta) ; 
+                  alpha_beta_horizontal(Moves, BoardCopie, D, Player, Move0, BestValue, BestMove, Alpha, Beta)
+            )
+      ).
 
-minimax([Move|Moves],Position,D,1, Value0,Move0,BestValue,BestMove):-
-
-	getCopie(Position,PositionCopie),
-
-	playMove(Position,Move,b,Position1),
-
-    Opponent is -1,
-
-    minimax(D, Position1, Opponent, OppValue, _OppMove), 
-
-    Value is -OppValue,
-    ( Value > Value0 ->        
-      minimax(Moves,PositionCopie,D,1, Value ,Move ,BestValue,BestMove) ; 
-      minimax(Moves,PositionCopie,D,1, Value0,Move0,BestValue,BestMove)
-    ). 
-
- minimax([Move|Moves],Position,D,-1, Value0,Move0,BestValue,BestMove):-
-
- 	getCopie(Position,PositionCopie),
-
-	playMove(Position,Move,w,Position1),
-
-    Opponent is 1,
-
-    minimax(D, Position1, Opponent, OppValue, _OppMove), 
-
-    Value is -OppValue,
-    ( Value > Value0 ->        
-      minimax(Moves,PositionCopie,D,-1, Value ,Move ,BestValue,BestMove) ; 
-      minimax(Moves,PositionCopie,D,-1, Value0,Move0,BestValue,BestMove)
-    ). 
+%Horizontal search when player cannot play : skip his turn
+alpha_beta_horizontal_vide(Moves, Board, D, Player, Move0, BestValue, BestMove, Alpha, Beta) :-
+      Opponent is -Player,
+      OppAlpha is -Beta,
+      OppBeta is -Alpha,
+      alpha_beta_vertical(D, Board, Opponent, OppValue, _OppMove, OppAlpha, OppBeta),
+      Value is -OppValue,
+      (
+            Value >= Beta -> 
+            BestValue = Value, BestMove = Move ;
+   	      (
+                  Value > Alpha ->        
+                  alpha_beta_horizontal(Moves, Board, D, Player, Move, BestValue, BestMove, Value, Beta) ; 
+                  alpha_beta_horizontal(Moves, Board, D, Player, Move0, BestValue, BestMove, Alpha, Beta)
+            )
+      ).
