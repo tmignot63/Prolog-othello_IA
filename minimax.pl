@@ -15,6 +15,27 @@ heuristic(7, Board, Value, P1, P2) :- heuristic_potential_mobility(Board, P1, P2
 %Launch the alpha-beta algorithm and return the best move that has been found
 alpha_beta(Pos, Move, Depth, Player) :- alpha_beta_vertical(Depth, Pos,Player, _, Move, -10000, 10000).
 
+%Find all valid moves for a player and sorts them according to position on the board. 
+%The potential best moves go at the beginning of the list and the worst moves at the end.
+allValidMovesSorted(Board, Player, List,ListSorted):-
+	allValidMoves(Board, Player, List),
+	sortMoves(List,
+	[0, 7, 56, 63, 2,3,4,5,
+	16,23,24,31,32,39,40,47,
+	58,59,60,61,18,21,42,45,
+	19,20,26,34,29,37,43,44,
+	10,11,12,13,17,25,33,41,
+	22,30,38,46,50,51,52,53,
+	1,6,8,15,48,55,57,62,
+	9,14,49,54],
+	ListSorted).
+
+%Sorts all Moves according to the static position on the board : corners first etc ...
+%Each case has a value. More the play on the case is good (statically), the greater the value is.
+sortMoves(Moves,Reference,[T|Q]):-nth0(Index,Reference,T),member(T,Moves),subtract(Moves,[T],NewMoves),sortMoves2(NewMoves,Reference,Q,Index).
+sortMoves2([],_,[],_).
+sortMoves2(Moves,Reference,[T|Q],I):-nth0(I2,Reference,T),member(T,Moves),subtract(Moves,[T],NewMoves),I<I2,sortMoves2(NewMoves,Reference,Q,I2).
+
 %Vertical search for the alpha-beta algorithm : go deeper in the game tree
 alpha_beta_vertical(_, Board, Player, Value, _, _, _) :-
       %Check if there is a winner
@@ -43,7 +64,8 @@ alpha_beta_vertical(D, Board,Player, Value, Move, Alpha, Beta) :-
       D1 is D - 1,
       playerini(Player, PlayerIni),
       (
-            allValidMoves(Board, PlayerIni, Moves) ->
+            
+            allValidMovesSorted(Board, PlayerIni,_,Moves)->
             alpha_beta_horizontal(Moves, Board, D1, Player, nil, Value, Move, Alpha, Beta) ;
             alpha_beta_horizontal_vide([], Board, D1, Player, nil, Value, Move, Alpha, Beta)
 	).
