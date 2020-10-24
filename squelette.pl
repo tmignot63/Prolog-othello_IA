@@ -290,13 +290,13 @@ selectWinner(B,W,Winner) :- B=\=W, B<W, Winner='White'.
 selectWinner(B,W,Winner) :- B=\=W, B>W, Winner='Black'.
 
 %Display the othello board
-displayBoard :- writeln('--------'), board(Board), displayRow(Board,0), writeln('--------').
+displayBoard :- writeln('ABCDEFGH'), board(Board), displayRow(Board,0), writeln('ABCDEFGH').
 
 displayRow([],_) :- writeln('').
 displayRow(Board,8) :- writeln(''), displayRow(Board,0).
 displayRow([H|T],X) :- Y is X+1, display(H), displayRow(T,Y).
 
-display(Elem) :- var(Elem), write('O').
+display(Elem) :- var(Elem), write('_').
 display(Elem) :- write(Elem).
 
 getCopie([],[]).
