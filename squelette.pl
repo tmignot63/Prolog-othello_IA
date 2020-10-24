@@ -114,7 +114,7 @@ play(Player) :- format('Player "~w" can not play.~n',[Player]), switchPlayer(Pla
 canMakeAMove(Board,Player) :- setof(X, isValid(Board,Player,X), List), member(_,List).
 
 %Get all valid moves for a player
-allValidMoves(Board, Player, List) :- setof(X, isValid(Board,Player,X), List), writeln('Available Moves : '),writeln(List).
+allValidMoves(Board, Player, List) :- setof(X, isValid(Board,Player,X), List).
 
 %Check if a move is valid
 isValid(Board,Player,Index) :- 
@@ -158,7 +158,7 @@ check_sandwich(Player, [H|_]) :- H == Player.
 check_sandwich(Player, [H|T]) :- H \== Player, check_sandwich(Player,T).
 
 %Play a regular move
-playMove(Board, Move, Player, NewBoard) :- nth0(Move,Board,Player), flipAll(Board,Move,Player,List), writeln('Liste a remplacer depuis flipAll :'),writeln(List),majBoard(Board,Player,List,NewBoard),!.
+playMove(Board, Move, Player, NewBoard) :- nth0(Move,Board,Player), flipAll(Board,Move,Player,List),majBoard(Board,Player,List,NewBoard),!.
 
 %Get the list of all flipped disk
 flipAll(Board,Move,Player,List) :- 
