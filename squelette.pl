@@ -267,12 +267,11 @@ switchPlayer('w','b').
 %%The discs are now counted and the player with the majority of his or her color 
 %%discs on the board is the winner.
 %%A tie is possible.
-gameover(Winner) :- board(Board), \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,Winner).
-gameover(Board, Winner) :- \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,Winner).
+gameover(Winner) :- board(Board), \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,Winner, B, W), format('~w black disks against ~w white disks.~n',[B,W]).
+gameover(Board, Winner) :- \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,Winner, _, _).
 
 %Find the winner
-findWinner(Board, Winner):- countDisk(Board,0,0,B,W), selectWinner(B,W,Winner),
-	format('~w black disks against ~w white disks.~n',[B,W]).
+findWinner(Board, Winner, B, W):- countDisk(Board,0,0,B,W), selectWinner(B,W,Winner).
 	
 %Count the number of disk for each player B and W
 countDisk([],B,W,FinalB,FinalW) :- FinalB is B, FinalW is W.
