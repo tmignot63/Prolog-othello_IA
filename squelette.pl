@@ -20,9 +20,21 @@
 %%Black always moves first.
 :- writeln('Bienvenue sur Prolog_Othello-IA !').
 :- dynamic(board/1).
+:- dynamic(playerini/2).
+:- dynamic(chooseHeuristicBlack/1).
+:- dynamic(chooseHeuristicWhite/1).
+:- dynamic(depthBlack/1).
+:- dynamic(depthWhite/1).
 :- retractall(board(_)).
-:- writeln('Chargement des Heuristics : ').
+:- retractall(playerini(_, _)).
+:- retractall(chooseHeuristicBlack(_)).
+:- retractall(chooseHeuristicWhite(_)).
+:- retractall(depthBlack(_)).
+:- retractall(depthWhite(_)).
+:- writeln('Chargement du minimax : ').
 :- [minimax].
+:- writeln('Chargement des Heuristics : ').
+:- [heuristic_disk_diff].
 :- [heuristic_coin_parity].
 :- [heuristic_actual_mobility].
 :- [heuristic_potential_mobility].
@@ -31,6 +43,11 @@
 
 init :- 
 	retractall(board(_)),
+	retractall(playerini(_, _)),
+	retractall(chooseHeuristicBlack(_)),
+	retractall(chooseHeuristicWhite(_)),
+	retractall(depthBlack(_)),
+	retractall(depthWhite(_)),
 	length(Board,64),
 	nth0(27,Board,'w'),
 	nth0(28,Board,'b'),
@@ -38,6 +55,46 @@ init :-
 	nth0(36,Board,'w'),
 	assertz(board(Board)),
 	writeln('Initialisation du board OK'),
+	repeat,
+	writeln(' ----- '),
+	writeln('Choisissez l\'heuristique pour le joueur noir (b)'),
+	writeln(' 1) Heuristique "random"'),
+	writeln(' 2) Heuristique "disk difference"'),
+	writeln(' 3) Heuristique "stability"'),
+	writeln(' 4) Heuristique "actual mobility"'),
+	writeln(' 5) Heuristique "coin parity"'),
+	writeln(' 6) Heuristique "corners captured"'),
+	writeln(' 7) Heuristique "potential mobility"'),
+	writeln(' ----- '),
+	read(HB),
+	HB>0,
+	HB<8,
+	assertz(chooseHeuristicBlack(HB)),
+	repeat,
+	writeln('Choisissez la profondeur pour le joueur noir (b)'),
+	read(DB),
+	DB>0,
+	assertz(depthBlack(DB)),
+	repeat,
+	writeln(' ----- '),
+	writeln('Choisissez l\'heuristique pour le joueur blanc (w)'),
+	writeln(' 1) Heuristique "random"'),
+	writeln(' 2) Heuristique "disk difference"'),
+	writeln(' 3) Heuristique "stability"'),
+	writeln(' 4) Heuristique "actual mobility"'),
+	writeln(' 5) Heuristique "coin parity"'),
+	writeln(' 6) Heuristique "corners captured"'),
+	writeln(' 7) Heuristique "potential mobility"'),
+	writeln(' ----- '),
+	read(HW),
+	HW>0,
+	HW<8,
+	assertz(chooseHeuristicWhite(HW)),
+	repeat,
+	writeln('Choisissez la profondeur pour le joueur blanc (w)'),
+	read(DW),
+	DB>0,
+	assertz(depthWhite(DW)),
 	displayBoard,
 	play('b').
 
@@ -149,10 +206,52 @@ replace([_|T], 0, X, [X|T]).
 replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
 
 %Implement IA
-%%TODO : Different algorithm, here is a random move from the list
-%ia(Board,Player, Move) :- allValidMoves(Board,Player,List), length(List,Length), random(0,Length, Index), nth0(Index,List,Move), format('IA plays move number ~w ~n',[Move]),!.
-ia(Board,w,Move) :- getCopie(Board,Boardcopie),minimax(Boardcopie,Move,6,-1),format('IA plays move number ~w ~n',[Move]).
-ia(Board,b,Move) :- getCopie(Board,Boardcopie),minimax(Boardcopie,Move,6,1),format('IA plays move number ~w ~n',[Move]).
+ia(Board, w, Move) :-
+	%White player
+	chooseHeuristicWhite(HW),
+	depthWhite(DW),
+	(
+		HW == 1 ->
+		(
+			%Random IA
+			allValidMoves(Board, w, List), 
+			length(List, Length), 
+			random(0, Length, Index), 
+			nth0(Index, List, Move)
+		);
+		(
+			getCopie(Board, BoardCopie),
+			assertz(playerini(-1, b)),
+			assertz(playerini(1, w)),
+			alpha_beta(BoardCopie, Move, DW, 1),
+			retract(playerini(-1, b)),
+			retract(playerini(1, w))
+		)
+	),
+	format('IA plays move number ~w ~n', [Move]).
+ia(Board, b, Move) :-
+	%Black player
+	chooseHeuristicBlack(HB),
+	depthBlack(DB),
+	(
+		HB == 1 ->
+		(
+			%Random IA
+			allValidMoves(Board, b, List), 
+			length(List, Length), 
+			random(0,Length, Index), 
+			nth0(Index, List, Move)
+		);
+		(
+			getCopie(Board, BoardCopie),
+			assertz(playerini(1, b)),
+			assertz(playerini(-1, w)),
+			alpha_beta(BoardCopie, Move, DB, 1),
+			retract(playerini(1, b)),
+			retract(playerini(-1, w))
+		)
+	),
+	format('IA plays move number ~w ~n', [Move]).
 
 %Save the new board and remove the old one from the knowledge base
 applyIt(Board,NewBoard) :- 
@@ -169,6 +268,7 @@ switchPlayer('w','b').
 %%discs on the board is the winner.
 %%A tie is possible.
 gameover(Winner) :- board(Board), \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,Winner).
+gameover(Board, Winner) :- \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,Winner).
 
 %Find the winner
 findWinner(Board, Winner):- countDisk(Board,0,0,B,W), selectWinner(B,W,Winner),
@@ -202,6 +302,3 @@ display(Elem) :- write(Elem).
 getCopie([],[]).
 getCopie([H|T],[H1|T1]):-var(H),var(H1),H1\==H,getCopie(T,T1).
 getCopie([H1|T1],[H1|T2]):- \+(var(H1)),getCopie(T1,T2).
-
-% TEMP
-heuristic(Board,Value):- countDisk(Board,0,0,B,W), Value is B-W.
