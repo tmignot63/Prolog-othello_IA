@@ -41,10 +41,14 @@ alpha_beta_vertical(_, Board, Player, Value, _, _, _) :-
       %Check if there is a winner
       gameover(Board, Winner),
 	playerini(1, X),
+      playerini(-1, Opponent),
       (
             Winner == X ->
             Value is (5000) * Player ;
-            Value is (-5000) * Player
+            (Winner == Opponent -> 
+            Value is (-5000) * Player;
+            Value is 0
+            )   
       ).
 
 alpha_beta_vertical(0, Board, PlayerCoef, Value, _, _, _) :-
