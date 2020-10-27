@@ -80,7 +80,7 @@ alpha_beta_horizontal([], _, _, _, Best1, Value1, Best1, Value1, _).
 alpha_beta_horizontal([Move|Moves], Board, D, Player, Move0, BestValue, BestMove, Alpha, Beta) :-
 	getCopie(Board, BoardCopie),
 	playerini(Player, PlayerIni),
-	playMove(Board, Move, PlayerIni, Board1),
+	playMove(BoardCopie, Move, PlayerIni, Board1),
 	Opponent is -Player,
       OppAlpha is -Beta,
       OppBeta is -Alpha,
@@ -91,8 +91,8 @@ alpha_beta_horizontal([Move|Moves], Board, D, Player, Move0, BestValue, BestMove
             BestValue = Value, BestMove = Move ;
             (
                   Value > Alpha ->        
-                  alpha_beta_horizontal(Moves, BoardCopie, D, Player, Move, BestValue, BestMove, Value, Beta) ; 
-                  alpha_beta_horizontal(Moves, BoardCopie, D, Player, Move0, BestValue, BestMove, Alpha, Beta)
+                  alpha_beta_horizontal(Moves, Board, D, Player, Move, BestValue, BestMove, Value, Beta) ; 
+                  alpha_beta_horizontal(Moves, Board, D, Player, Move0, BestValue, BestMove, Alpha, Beta)
             )
       ).
 
