@@ -132,7 +132,7 @@ isValid(Board,Player,Index) :-
 emptyCell(Board,Index) :- nth0(Index,Board,X), var(X).
 
 %Check in all direction if there is a sandwich (at least one opposite disk then a player disk)
-isSandwich(Board,Player,Index,Direction) :- switchPlayer(Player,Opponent), listDiskInDirection(Board,Index,Direction,[],[Opponent|FinalList]), check_sandwich(Player, FinalList). 
+isSandwich(Board,Player,Index,Direction) :- switchPlayer(Player,Opponent), listDiskInDirection(Board,Index,Direction,[],FinalList), nth0(0, FinalList, Temp), nonvar(Temp), Temp == Opponent, check_sandwich(Player, FinalList). 
 
 %List all the disk in a precise direction from the index to the last cell of the direction
 listDiskInDirection(_,Index,Direction,List,FinalList) :- \+ nextCell(Index,Direction,_), !, FinalList = List.
