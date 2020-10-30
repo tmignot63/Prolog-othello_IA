@@ -55,11 +55,7 @@ alpha_beta_vertical(0, Board, PlayerCoef, Value, _, _, _) :-
       %Depth = 0
 	playerini(1, PlayerIni),
       playerini(-1, Opponent),
-	(
-		PlayerIni == b ->
-		chooseHeuristicBlack(H) ;
-		chooseHeuristicWhite(H)
-	),
+      heuristicPlayer(PlayerIni, H),
 	heuristic(H, Board, V, PlayerIni, Opponent),
       Value is V * PlayerCoef.
 
