@@ -65,12 +65,18 @@ init :-
 			repeat,
 			writeln(' ----- '),
 			writeln('Choisissez l\'heuristique pour le joueur noir (b)'),
-			chooseHeuristic(b),
-			repeat,
-			writeln('Choisissez la profondeur pour le joueur noir (b)'),
-			read(DB),
-			DB>0,
-			assertz(depthPlayer(b, DB))
+			chooseHeuristic(b, HB),
+			(
+				HB > 1 ->
+				(
+					repeat,
+					writeln('Choisissez la profondeur pour le joueur noir (b)'),
+					read(DB),
+					DB>0,
+					assertz(depthPlayer(b, DB))
+				) ;
+				true
+			)
 		) ;
 		true
 	),
@@ -90,19 +96,25 @@ init :-
 			repeat,
 			writeln(' ----- '),
 			writeln('Choisissez l\'heuristique pour le joueur blanc (w)'),
-			chooseHeuristic(w),
-			repeat,
-			writeln('Choisissez la profondeur pour le joueur blanc (w)'),
-			read(DW),
-			DB>0,
-			assertz(depthPlayer(w, DW))
+			chooseHeuristic(w, HW),
+			(
+				HW > 1 ->
+				(
+					repeat,
+					writeln('Choisissez la profondeur pour le joueur blanc (w)'),
+					read(DW),
+					DW>0,
+					assertz(depthPlayer(w, DW))
+				) ;
+				true
+			)
 		) ;
 		true
 	),
 	displayBoard,
 	play('b').
 
-chooseHeuristic(Player) :- 
+chooseHeuristic(Player, H) :- 
 	writeln(' 1) Heuristique "random"'),
 	writeln(' 2) Heuristique "disk difference"'),
 	writeln(' 3) Heuristique "stability"'),
@@ -226,7 +238,6 @@ replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
 %Implement IA
 ia(Board, Player, Move) :-
 	heuristicPlayer(Player, H),
-	depthPlayer(Player, D),
 	(
 		H == 1 ->
 		(
@@ -237,6 +248,7 @@ ia(Board, Player, Move) :-
 			nth0(Index, List, Move)
 		);
 		(
+			depthPlayer(Player, D),
 			switchPlayer(Player, Opponent),
 			getCopie(Board, BoardCopie),
 			assertz(playerini(-1, Opponent)),
