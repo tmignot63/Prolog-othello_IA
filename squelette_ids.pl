@@ -8,8 +8,6 @@
 % OECHSLIN K.    %
 %%%%%%%%%%%%%%%%%%
 
-%%%test heurtitique 2 , profondeur=4, valeur ini mtdf=0 : bug -> Le coup remonte pas
-
 %Rules : https://www.ultraboardgames.com/othello/game-rules.php
 %Heuristics : https://courses.cs.washington.edu/courses/cse573/04au/Project/mini1/RUSSIA/Final_Paper.pdf
 
@@ -35,8 +33,8 @@
 :- retractall(chooseHeuristicWhite(_)).
 :- retractall(depthBlack(_)).
 :- retractall(depthWhite(_)).
-:- writeln('Chargement du minimax : ').
-:- [minimax].
+:- writeln('Chargement de ids : ').
+:- [ids].
 :- writeln('Chargement des Heuristics : ').
 :- [heuristic_disk_diff].
 :- [heuristic_coin_parity].
@@ -77,7 +75,7 @@ init :-
 	HB<8,
 	assertz(chooseHeuristicBlack(HB)),
 	repeat,
-	writeln('Choisissez la profondeur pour le joueur noir (b)'),
+	writeln('Choisissez la profondeur maximum pour le joueur noir (b)'),
 	read(DB),
 	DB>0,
 	assertz(depthBlack(DB)),
@@ -97,7 +95,7 @@ init :-
 	HW<8,
 	assertz(chooseHeuristicWhite(HW)),
 	repeat,
-	writeln('Choisissez la profondeur pour le joueur blanc (w)'),
+	writeln('Choisissez la profondeur maximum pour le joueur blanc (w)'),
 	read(DW),
 	DB>0,
 	assertz(depthWhite(DW)),
@@ -317,10 +315,12 @@ displayRow([H|T],X) :- Y is X+1, display(H), displayRow(T,Y).
 display(Elem) :- var(Elem), write('_').
 display(Elem) :- write(Elem).
 
+%Get a copie of the board
 getCopie([],[]).
 getCopie([H|T],[H1|T1]):-var(H),var(H1),H1\==H,getCopie(T,T1).
 getCopie([H1|T1],[H1|T2]):- \+(var(H1)),getCopie(T1,T2).
 
+%Get a copie of the board with the special value o for the blank cases
 getBoardDisplay([],[]).
 getBoardDisplay([H|T],[H1|T1]):-var(H),H1=o,getBoardDisplay(T,T1).
 getBoardDisplay([H1|T1],[H1|T2]):- \+(var(H1)),getBoardDisplay(T1,T2).
