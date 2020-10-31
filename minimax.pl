@@ -13,7 +13,7 @@ heuristic(6, Board, Value, P1, P2) :- heuristic_cornersCaptured(Board, P1, P2, V
 heuristic(7, Board, Value, P1, P2) :- heuristic_potential_mobility(Board, P1, P2, Value).
 
 %Launch the alpha-beta algorithm and return the best move that has been found
-alpha_beta(Pos, Move, Depth, Player) :- alpha_beta_vertical(Depth, Pos,Player, _, Move, -10000, 10000).
+alpha_beta(Pos, Move, Depth, Player) :- alpha_beta_vertical(Depth, Pos,Player, _, Move, -1000000000, 1000000000).
 
 %Find all valid moves for a player and sorts them according to position on the board. 
 %The potential best moves go at the beginning of the list and the worst moves at the end.
@@ -39,14 +39,14 @@ sortMoves2(Moves,Reference,[T|Q],I):-nth0(I2,Reference,T),member(T,Moves),subtra
 %Vertical search for the alpha-beta algorithm : go deeper in the game tree
 alpha_beta_vertical(_, Board, Player, Value, _, _, _) :-
       %Check if there is a winner
-      gameover(Board, Winner),
+      gameoverWithResult(Board, Winner, Nb),
 	playerini(1, X),
       playerini(-1, Opponent),
       (
             Winner == X ->
-            Value is (5000) * Player ;
+            Value is (1000) * Player * Nb;
             (Winner == Opponent -> 
-            Value is (-5000) * Player;
+            Value is (-1000) * Player * Nb;
             Value is 0
             )   
       ).

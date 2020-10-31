@@ -274,6 +274,8 @@ switchPlayer('w','b').
 gameover(Winner) :- board(Board), \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,Winner, B, W), format('~w black disks against ~w white disks.~n',[B,W]).
 gameover(Board, Winner) :- \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,Winner, _, _).
 
+gameoverWithResult(Board, Winner, Nb) :- \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,WinnerInter,B,W), (WinnerInter == 'White' -> Winner = 'w', Nb is W ; Winner = 'b', Nb is B).
+
 %Find the winner
 findWinner(Board, Winner, B, W):- countDisk(Board,0,0,B,W), selectWinner(B,W,Winner).
 	
