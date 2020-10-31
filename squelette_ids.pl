@@ -233,7 +233,6 @@ ia(Board, w, Move) :-
 			assertz(hashmap(_{})),
 			get_time(Time),
 			ids(0,1,DW,BoardCopie,1,_,Move,Time),
-			%mtdf(-10000, 10000,DW, BoardCopie,1,0,_,Move),
 			retract(playerini(-1, b)),
 			retract(playerini(1, w))
 		)
@@ -260,7 +259,6 @@ ia(Board, b, Move) :-
 			assertz(hashmap(_{})),
 			get_time(Time),
 			ids(0,1,DB,BoardCopie,1,_,Move,Time),
-			%mtdf(-10000, 10000,DB, BoardCopie,1,0,_,Move),
 			retract(playerini(1, b)),
 			retract(playerini(-1, w))
 		)
@@ -283,6 +281,8 @@ switchPlayer('w','b').
 %%A tie is possible.
 gameover(Winner) :- board(Board), \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,Winner, B, W), format('~w black disks against ~w white disks.~n',[B,W]).
 gameover(Board, Winner) :- \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,Winner, _, _).
+
+gameoverWithResult(Board, Winner,Nb) :- \+ canMakeAMove(Board,'w'), \+ canMakeAMove(Board,'b'), findWinner(Board,WinnerInter, B, W),(WinnerInter=='White' -> Winner='w',Nb is W ; Winner='b', Nb is B).
 
 %Find the winner
 findWinner(Board, Winner, B, W):- countDisk(Board,0,0,B,W), selectWinner(B,W,Winner).

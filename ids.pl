@@ -4,6 +4,12 @@
 
 :- writeln('Minimax has loaded.').
 
+% MINIMAX
+% IA selon la methode minimax
+% Elle cherche les differents coups à jouer sur une profondeur donnée, puis selectionne le chemin qui mene vers le meilleur selon lheuristique choisie.
+
+:- writeln('Minimax has loaded.').
+
 %Select the chosen heuristic
 heuristic(2, Board, Value, _, _) :- heuristic_disk_diff(Board, Value).
 heuristic(3, Board, Value, P1, P2) :- heuristic_stability(Board, P1, P2, Value).
@@ -14,17 +20,17 @@ heuristic(7, Board, Value, P1, P2) :- heuristic_potential_mobility(Board, P1, P2
 
 getKey(Board,Key,Player):-atomic_list_concat(Board,KeyInter),atom_concat(KeyInter,Player,Key).
 
-ids(_,Depth,DepthMax,_,_,Move,FinalMove,Time):- get_time(NewTime),DiffTime is NewTime-Time,DiffTime>=3,write("DEPTH="),writeln(Depth),FinalMove is Move.
+ids(_,Depth,_,_,_,Move,FinalMove,Time):- get_time(NewTime),DiffTime is NewTime-Time,DiffTime>=3,write("DEPTH="),writeln(Depth),FinalMove is Move.
 ids(_,Depth,DepthMax,_,_,Move,FinalMove,_):-Depth>DepthMax,FinalMove is Move.
 
 ids(FirstGuess,Depth,DepthMax,Board,Player,_,FinalMove,Time):-
 Depth=<DepthMax,
-mtdf(-10000, 10000,Depth, Board,Player,FirstGuess,_,NewMove,Value),
+mtdf(-1000000, 1000000,Depth, Board,Player,FirstGuess,_,NewMove,Value),
 NewDepth is Depth+1,
 ids(Value,NewDepth,DepthMax,Board,Player,NewMove,FinalMove,Time).
 
-mtdf(Low,Upp,Depth,Board,Player,Value,Move,MoveFinal,LastFinalValue):- Low>=Upp, MoveFinal is Move,LastFinalValue is Value.
-mtdf(Low,Upp,Depth,Board,Player,Value,Move,MoveFinal,LastFinalValue):- Low<Upp,(Value==Low -> Beta is Value+1 ; Beta is Value),
+mtdf(Low,Upp,_,_,_,Value,Move,MoveFinal,LastFinalValue):- Low>=Upp, MoveFinal is Move,LastFinalValue is Value.
+mtdf(Low,Upp,Depth,Board,Player,Value,_,MoveFinal,LastFinalValue):- Low<Upp,(Value==Low -> Beta is Value+1 ; Beta is Value),
 Alpha is Beta-1,
 alpha_beta(Board,NewMove,Depth,Player,Alpha,Beta,ValueFinal),
 (ValueFinal<Beta -> Upp2 is ValueFinal, Low2 is Low ; Low2 is ValueFinal, Upp2 is Upp),
@@ -57,14 +63,16 @@ sortMoves2(Moves,Reference,[T|Q],I):-nth0(I2,Reference,T),member(T,Moves),subtra
 %Vertical search for the alpha-beta algorithm : go deeper in the game tree
 alpha_beta_vertical(_, Board, Player, Value, _, _, _) :-
       %Check if there is a winner
-      gameover(Board, Winner),
+      gameoverWithResult(Board, Winner,Nb),
       playerini(1, X),
       playerini(-1, Opponent),
       (
             Winner == X ->
-            Value is (5000) * Player ;
+            writeln("WINNER 1 "),
+            Value is (1000) * Player * Nb;
             (Winner == Opponent -> 
-            Value is (-5000) * Player;
+            writeln("WINNER 2 "),
+            Value is (-1000) * Player * Nb;
             Value is 0
             )   
       ).
@@ -97,8 +105,8 @@ alpha_beta_vertical(D, Board,Player, Value, Move, Alpha, Beta) :-
       playerini(Player, PlayerIni),
       (
             allValidMovesSorted(Board, PlayerIni,_,Moves)->
-            alpha_beta_horizontal(Moves, Board, D1, Player,-1, Value, Move, Alpha, Beta,-10000,_) ;
-            alpha_beta_horizontal_vide([], Board, D1, Player,-1, Value, Move, Alpha, Beta,-10000,_)
+            alpha_beta_horizontal(Moves, Board, D1, Player,-1, Value, Move, Alpha, Beta,-1000000,_) ;
+            alpha_beta_horizontal_vide([], Board, D1, Player,-1, Value, Move, Alpha, Beta,-1000000,_)
       ),
 
       alpha_beta_store(D1, Board,Player,Value).
