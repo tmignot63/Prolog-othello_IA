@@ -23,10 +23,12 @@
 :- dynamic(playerini/2).
 :- dynamic(heuristicPlayer/2).
 :- dynamic(depthPlayer/2).
+:- dynamic(playerType/2).
 :- retractall(board(_)).
 :- retractall(playerini(_, _)).
 :- retractall(heuristicPlayer(_, _)).
 :- retractall(depthPlayer(_, _)).
+:- retractall(playerType(_, _)).
 :- writeln('Chargement du minimax : ').
 :- [minimax].
 :- writeln('Chargement des Heuristics : ').
@@ -42,6 +44,7 @@ init :-
 	retractall(playerini(_, _)),
 	retractall(heuristicPlayer(_, _)),
 	retractall(depthPlayer(_, _)),
+	retractall(playerType(_, _)),
 	length(Board,64),
 	nth0(27,Board,'w'),
 	nth0(28,Board,'b'),
@@ -114,6 +117,7 @@ init :-
 	displayBoard,
 	play('b').
 
+%Choose the heuristic for the given player
 chooseHeuristic(Player, H) :- 
 	writeln(' 1) Heuristique "random"'),
 	writeln(' 2) Heuristique "disk difference"'),
@@ -260,6 +264,7 @@ ia(Board, Player, Move) :-
 	),
 	format('IA plays move number ~w ~n', [Move]).
 
+%Ask for the move of the human player
 human(Board,Player,Move) :-
 	allValidMoves(Board, Player, ListMoves),
 	repeat,
