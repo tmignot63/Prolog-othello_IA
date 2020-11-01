@@ -17,13 +17,11 @@ getKey(Board,Key,Player):-atomic_list_concat(Board,KeyInter),atom_concat(KeyInte
 
 % Implementation of the iterative deepening depth-first search 
 % Increase the depth and launch the mtdf algorithm until depth max is reached or time is out.
-ids(_,Depth,_,_,_,Move,FinalMove,Time):- get_time(NewTime),DiffTime is (NewTime-Time)*(NewTime-Time),DiffTime>=3,write("DEPTH="),writeln(Depth-1),FinalMove is Move.
-ids(_,Depth,DepthMax,_,_,Move,FinalMove,_):-Depth>DepthMax,FinalMove is Move.
-ids(FirstGuess,Depth,DepthMax,Board,Player,_,FinalMove,Time):-
-Depth=<DepthMax,
+ids(_,Depth,TimeMax,_,_,Move,FinalMove,Time):- get_time(NewTime),DiffTime is (NewTime-Time)*(NewTime-Time),DiffTime>=TimeMax,write("DEPTH="),DepthDisp is Depth-1,writeln(DepthDisp),FinalMove is Move.
+ids(FirstGuess,Depth,TimeMax,Board,Player,_,FinalMove,Time):-
 mtdf(-1000000, 1000000,Depth, Board,Player,FirstGuess,_,NewMove,Value),
 NewDepth is Depth+1,
-ids(Value,NewDepth,DepthMax,Board,Player,NewMove,FinalMove,Time).
+ids(Value,NewDepth,TimeMax,Board,Player,NewMove,FinalMove,Time).
 
 %Memory-enhanced Test Driver algorithm 
 %Launch alpha-beta algorithm with a zero-window search, search for a bound to the minimax value until converging to the minimax value.
@@ -76,11 +74,7 @@ alpha_beta_vertical(0, Board, PlayerCoef, Value, _, _, _) :-
       %Depth = 0
       playerini(1, PlayerIni),
       playerini(-1, Opponent),
-      (
-            PlayerIni == b ->
-            chooseHeuristicBlack(H) ;
-            chooseHeuristicWhite(H)
-      ),
+      heuristicPlayer(PlayerIni, H),
       heuristic(H, Board, V, PlayerIni, Opponent),
       ValueRound is round(V),
       Value is ValueRound * PlayerCoef.

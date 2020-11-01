@@ -21,18 +21,16 @@
 :- writeln('Bienvenue sur Prolog_Othello-IA !').
 :- dynamic(board/1).
 :- dynamic(playerini/2).
-:- dynamic(chooseHeuristicBlack/1).
-:- dynamic(chooseHeuristicWhite/1).
-:- dynamic(depthBlack/1).
-:- dynamic(depthWhite/1).
+:- dynamic(heuristicPlayer/2).
+:- dynamic(timePlayer/2).
+:- dynamic(playerType/2).
 :- dynamic(hashmap/1).
 :- retractall(hashmap(_)).
 :- retractall(board(_)).
 :- retractall(playerini(_, _)).
-:- retractall(chooseHeuristicBlack(_)).
-:- retractall(chooseHeuristicWhite(_)).
-:- retractall(depthBlack(_)).
-:- retractall(depthWhite(_)).
+:- retractall(heuristicPlayer(_, _)).
+:- retractall(timePlayer(_, _)).
+:- retractall(playerType(_, _)).
 :- writeln('Chargement de ids : ').
 :- [ids].
 :- writeln('Chargement des Heuristics : ').
@@ -47,10 +45,9 @@ init :-
 	retractall(board(_)),
 	retractall(hashmap(_)),
 	retractall(playerini(_, _)),
-	retractall(chooseHeuristicBlack(_)),
-	retractall(chooseHeuristicWhite(_)),
-	retractall(depthBlack(_)),
-	retractall(depthWhite(_)),
+	retractall(heuristicPlayer(_, _)),
+	retractall(timePlayer(_, _)),
+	retractall(playerType(_, _)),
 	length(Board,64),
 	nth0(27,Board,'w'),
 	nth0(28,Board,'b'),
@@ -61,46 +58,83 @@ init :-
 	writeln('Initialisation du board OK'),
 	repeat,
 	writeln(' ----- '),
-	writeln('Choisissez l\'heuristique pour le joueur noir (b)'),
-	writeln(' 1) Heuristique "random"'),
-	writeln(' 2) Heuristique "disk difference"'),
-	writeln(' 3) Heuristique "stability"'),
-	writeln(' 4) Heuristique "actual mobility"'),
-	writeln(' 5) Heuristique "coin parity"'),
-	writeln(' 6) Heuristique "corners captured"'),
-	writeln(' 7) Heuristique "potential mobility"'),
+	writeln('Le joueur noir (b) est : '),
+	writeln('1) Humain'),
+	writeln('2) IA'),
 	writeln(' ----- '),
-	read(HB),
-	HB>0,
-	HB<8,
-	assertz(chooseHeuristicBlack(HB)),
-	repeat,
-	writeln('Choisissez la profondeur maximum pour le joueur noir (b)'),
-	read(DB),
-	DB>0,
-	assertz(depthBlack(DB)),
+	read(PB),
+	PB > 0,
+	PB < 3,
+	assertz(playerType(b, PB)),
+	(
+		PB == 2 ->
+		(
+			repeat,
+			writeln(' ----- '),
+			writeln('Choisissez l\'heuristique pour le joueur noir (b)'),
+			chooseHeuristic(b, HB),
+			(
+				HB > 1 ->
+				(
+					repeat,
+					writeln('Choisissez le temps maximal pour le joueur noir (b)'),
+					read(TB),
+					TB>0,
+					assertz(timePlayer(b, TB))
+				) ;
+				true
+			)
+		) ;
+		true
+	),
 	repeat,
 	writeln(' ----- '),
-	writeln('Choisissez l\'heuristique pour le joueur blanc (w)'),
-	writeln(' 1) Heuristique "random"'),
-	writeln(' 2) Heuristique "disk difference"'),
-	writeln(' 3) Heuristique "stability"'),
-	writeln(' 4) Heuristique "actual mobility"'),
-	writeln(' 5) Heuristique "coin parity"'),
-	writeln(' 6) Heuristique "corners captured"'),
-	writeln(' 7) Heuristique "potential mobility"'),
+	writeln('Le joueur blanc (w) est : '),
+	writeln('1) Humain'),
+	writeln('2) IA'),
 	writeln(' ----- '),
-	read(HW),
-	HW>0,
-	HW<8,
-	assertz(chooseHeuristicWhite(HW)),
-	repeat,
-	writeln('Choisissez la profondeur maximum pour le joueur blanc (w)'),
-	read(DW),
-	DB>0,
-	assertz(depthWhite(DW)),
+	read(PW),
+	PW > 0,
+	PW < 3,
+	assertz(playerType(w, PW)),
+	(
+		PW == 2 ->
+		(
+			repeat,
+			writeln(' ----- '),
+			writeln('Choisissez l\'heuristique pour le joueur blanc (w)'),
+			chooseHeuristic(w, HW),
+			(
+				HW > 1 ->
+				(
+					repeat,
+					writeln('Choisissez le temps maximal pour le joueur blanc (w)'),
+					read(TW),
+					TW>0,
+					assertz(timePlayer(w, TW))
+				) ;
+				true
+			)
+		) ;
+		true
+	),
 	displayBoard,
 	play('b').
+
+%Choose the heuristic for the given player
+chooseHeuristic(Player, H) :- 
+	writeln(' 1) Heuristique "random"'),
+	writeln(' 2) Heuristique "disk difference"'),
+	writeln(' 3) Heuristique "stability"'),
+	writeln(' 4) Heuristique "actual mobility"'),
+	writeln(' 5) Heuristique "coin parity"'),
+	writeln(' 6) Heuristique "corners captured"'),
+	writeln(' 7) Heuristique "potential mobility"'),
+	writeln(' ----- '),
+	read(H),
+	H>0,
+	H<8,
+	assertz(heuristicPlayer(Player, H)).
 
 %Playing turn
 %%if there is no winner, we made a normal turn for the next player
@@ -108,8 +142,8 @@ init :-
 %%your turn. However, if a move is available to you, you cant forfeit your turn.
 %%if a player cannot make a valide move, he pass his turn and the opponent continues
 play(_) :- 	 gameover(Winner), !, format('Game is over, the winner is ~w ~n',[Winner]), displayBoard.
-play(Player) :- board(Board), canMakeAMove(Board,Player), format('New turn for : ~w ~n',[Player]), displayBoard, 
-				ia(Board,Player,Move), playMove(Board,Move,Player,NewBoard), applyIt(Board,NewBoard), switchPlayer(Player,NextPlayer), play(NextPlayer).
+play(Player) :- board(Board), canMakeAMove(Board,Player), format('New turn for : ~w ~n',[Player]), displayBoard, playerType(Player, Type),
+				(Type == 2 -> ia(Board,Player,Move) ; human(Board,Player,Move)), playMove(Board,Move,Player,NewBoard), applyIt(Board,NewBoard), switchPlayer(Player,NextPlayer), play(NextPlayer).
 play(Player) :- format('Player "~w" can not play.~n',[Player]), switchPlayer(Player,NextPlayer), play(NextPlayer).
 
 %Check if a move is still available for the player
@@ -210,58 +244,42 @@ replace([_|T], 0, X, [X|T]).
 replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
 
 %Implement IA
-ia(Board, w, Move) :-
-	%White player
-	chooseHeuristicWhite(HW),
-	depthWhite(DW),
+ia(Board, Player, Move) :-
+	heuristicPlayer(Player, H),
 	(
-		HW == 1 ->
+		H == 1 ->
 		(
 			%Random IA
-			allValidMoves(Board, w, List), 
+			allValidMoves(Board, Player, List), 
 			length(List, Length), 
 			random(0, Length, Index), 
 			nth0(Index, List, Move)
 		);
 		(
+			timePlayer(Player, TimeMax),
+			switchPlayer(Player, Opponent),
 			getCopie(Board, BoardCopie),
-			assertz(playerini(-1, b)),
-			assertz(playerini(1, w)),
 			retractall(hashmap(_)),
 			assertz(hashmap(_{})),
 			get_time(Time),
-			ids(0,1,DW,BoardCopie,1,_,Move,Time),
-			retract(playerini(-1, b)),
-			retract(playerini(1, w))
+			assertz(playerini(-1, Opponent)),
+			assertz(playerini(1, Player)),
+			ids(0,1,TimeMax,BoardCopie,1,_,Move,Time),
+			retract(playerini(-1, Opponent)),
+			retract(playerini(1, Player))
 		)
 	),
 	format('IA plays move number ~w ~n', [Move]).
-ia(Board, b, Move) :-
-	%Black player
-	chooseHeuristicBlack(HB),
-	depthBlack(DB),
-	(
-		HB == 1 ->
-		(
-			%Random IA
-			allValidMoves(Board, b, List), 
-			length(List, Length), 
-			random(0,Length, Index), 
-			nth0(Index, List, Move)
-		);
-		(
-			getCopie(Board, BoardCopie),
-			assertz(playerini(1, b)),
-			assertz(playerini(-1, w)),
-			retractall(hashmap(_)),
-			assertz(hashmap(_{})),
-			get_time(Time),
-			ids(0,1,DB,BoardCopie,1,_,Move,Time),
-			retract(playerini(1, b)),
-			retract(playerini(-1, w))
-		)
-	),
-	format('IA plays move number ~w ~n', [Move]).
+
+%Ask for the move of the human player
+human(Board,Player,Move) :-
+	allValidMoves(Board, Player, ListMoves),
+	repeat,
+	writeln('Selectionnez le coup que vous voulez jouer parmis les suivants :'),
+	write(ListMoves),
+	read(Move),
+	member(Move, ListMoves),
+	format('Vous avez joue le coup ~w ~n', [Move]).
 
 %Save the new board and remove the old one from the knowledge base
 applyIt(Board,NewBoard) :- 
