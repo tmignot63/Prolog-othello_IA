@@ -155,14 +155,14 @@ alpha_beta_horizontal_vide_ids(Moves, Board, D, Player, Move0, BestValue, BestMo
       Value is -OppValue,
       (
             Value >= Beta ->
-            BestValue = Value, BestMove = Move ;
+            BestValue = Value ;
             (
                   (
                         Value > Alpha ->
-                        alpha_beta_horizontal_ids(Moves, Board, D, Player, Move, BestValue, BestMove, Value, Beta,Value,Move) ;
+                        alpha_beta_horizontal_ids(Moves, Board, D, Player, _, BestValue, BestMove, Value, Beta,Value,_) ;
                         (
                               Value > OldValue ->
-                              alpha_beta_horizontal_ids(Moves, Board, D, Player, Move0, BestValue, BestMove, Alpha, Beta,Value,Move) ;
+                              alpha_beta_horizontal_ids(Moves, Board, D, Player, Move0, BestValue, BestMove, Alpha, Beta,Value,_) ;
                               alpha_beta_horizontal_ids(Moves, Board, D, Player, Move0, BestValue, BestMove, Alpha, Beta,OldValue,OldMove)
                         )
                   )

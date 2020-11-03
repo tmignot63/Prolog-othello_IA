@@ -101,10 +101,10 @@ alpha_beta_horizontal_vide(Moves, Board, D, Player, Move0, BestValue, BestMove, 
       Value is -OppValue,
       (
             Value >= Beta ->
-            BestValue = Value, BestMove = Move ;
+            BestValue = Value ;
    	      (
                   Value > Alpha ->
-                  alpha_beta_horizontal(Moves, Board, D, Player, Move, BestValue, BestMove, Value, Beta) ;
+                  alpha_beta_horizontal(Moves, Board, D, Player, _, BestValue, BestMove, Value, Beta) ;
                   alpha_beta_horizontal(Moves, Board, D, Player, Move0, BestValue, BestMove, Alpha, Beta)
             )
       ).
