@@ -1,8 +1,8 @@
-% MINIMAX
-% IA selon la methode minimax
+% ALPHA BETA
+% IA selon la methode minimax et l elagage alpha bete
 % Elle cherche les differents coups à jouer sur une profondeur donnée, puis selectionne le chemin qui mene vers le meilleur selon lheuristique choisie.
 
-:- writeln('Minimax has loaded.').
+:- writeln('Alpha beta has loaded.').
 
 %Select the chosen heuristic
 heuristic(2, Board, Value, _, _) :- heuristic_disk_diff(Board, Value).
@@ -15,7 +15,7 @@ heuristic(7, Board, Value, P1, P2) :- heuristic_potential_mobility(Board, P1, P2
 %Launch the alpha-beta algorithm and return the best move that has been found
 alpha_beta(Pos, Move, Depth, Player) :- alpha_beta_vertical(Depth, Pos,Player, _, Move, -1000000000, 1000000000).
 
-%Find all valid moves for a player and sorts them according to position on the board. 
+%Find all valid moves for a player and sorts them according to position on the board.
 %The potential best moves go at the beginning of the list and the worst moves at the end.
 allValidMovesSorted(Board, Player, List,ListSorted):-
 	allValidMoves(Board, Player, List),
@@ -45,10 +45,10 @@ alpha_beta_vertical(_, Board, Player, Value, _, _, _) :-
       (
             Winner == X ->
             Value is (1000) * Player * Nb;
-            (Winner == Opponent -> 
+            (Winner == Opponent ->
             Value is (-1000) * Player * Nb;
             Value is 0
-            )   
+            )
       ).
 
 alpha_beta_vertical(0, Board, PlayerCoef, Value, _, _, _) :-
@@ -60,11 +60,11 @@ alpha_beta_vertical(0, Board, PlayerCoef, Value, _, _, _) :-
       Value is V * PlayerCoef.
 
 alpha_beta_vertical(D, Board,Player, Value, Move, Alpha, Beta) :-
-      D > 0, 
+      D > 0,
       D1 is D - 1,
       playerini(Player, PlayerIni),
       (
-            
+
             allValidMovesSorted(Board, PlayerIni,_,Moves)->
             alpha_beta_horizontal(Moves, Board, D1, Player, nil, Value, Move, Alpha, Beta) ;
             alpha_beta_horizontal_vide([], Board, D1, Player, nil, Value, Move, Alpha, Beta)
@@ -80,14 +80,14 @@ alpha_beta_horizontal([Move|Moves], Board, D, Player, Move0, BestValue, BestMove
 	Opponent is -Player,
       OppAlpha is -Beta,
       OppBeta is -Alpha,
-      alpha_beta_vertical(D, Board1, Opponent, OppValue, _OppMove, OppAlpha, OppBeta), 
+      alpha_beta_vertical(D, Board1, Opponent, OppValue, _OppMove, OppAlpha, OppBeta),
       Value is -OppValue,
       (
-            Value >= Beta -> 
+            Value >= Beta ->
             BestValue = Value, BestMove = Move ;
             (
-                  Value > Alpha ->        
-                  alpha_beta_horizontal(Moves, Board, D, Player, Move, BestValue, BestMove, Value, Beta) ; 
+                  Value > Alpha ->
+                  alpha_beta_horizontal(Moves, Board, D, Player, Move, BestValue, BestMove, Value, Beta) ;
                   alpha_beta_horizontal(Moves, Board, D, Player, Move0, BestValue, BestMove, Alpha, Beta)
             )
       ).
@@ -100,11 +100,11 @@ alpha_beta_horizontal_vide(Moves, Board, D, Player, Move0, BestValue, BestMove, 
       alpha_beta_vertical(D, Board, Opponent, OppValue, _OppMove, OppAlpha, OppBeta),
       Value is -OppValue,
       (
-            Value >= Beta -> 
+            Value >= Beta ->
             BestValue = Value, BestMove = Move ;
    	      (
-                  Value > Alpha ->        
-                  alpha_beta_horizontal(Moves, Board, D, Player, Move, BestValue, BestMove, Value, Beta) ; 
+                  Value > Alpha ->
+                  alpha_beta_horizontal(Moves, Board, D, Player, Move, BestValue, BestMove, Value, Beta) ;
                   alpha_beta_horizontal(Moves, Board, D, Player, Move0, BestValue, BestMove, Alpha, Beta)
             )
       ).
