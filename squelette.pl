@@ -29,8 +29,8 @@
 :- retractall(heuristicPlayer(_, _)).
 :- retractall(depthPlayer(_, _)).
 :- retractall(playerType(_, _)).
-:- writeln('Chargement du minimax : ').
-:- [minimax].
+:- writeln('Chargement de alpha beta : ').
+:- [alpha_beta].
 :- writeln('Chargement des Heuristics : ').
 :- [heuristic_disk_diff].
 :- [heuristic_coin_parity].

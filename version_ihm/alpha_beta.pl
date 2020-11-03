@@ -1,5 +1,5 @@
 % ALPHA BETA
-% IA selon la methode minimax et l elagage alpha bete
+% IA selon la methode minimax et l elagage alpha beta
 % Elle cherche les differents coups à jouer sur une profondeur donnée, puis selectionne le chemin qui mene vers le meilleur selon lheuristique choisie.
 
 :- writeln('Alpha beta has loaded.').
