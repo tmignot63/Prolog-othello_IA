@@ -25,14 +25,22 @@
 :- dynamic(depthPlayer/2).
 :- dynamic(playerType/2).
 :- dynamic(playerMoveGUI/1).
+:- dynamic(choiceAlgorithm/1).
+:- dynamic(hashmap/1).
+:- dynamic(timePlayer/2).
 :- retractall(board(_)).
 :- retractall(playerini(_, _)).
 :- retractall(heuristicPlayer(_, _)).
 :- retractall(depthPlayer(_, _)).
 :- retractall(playerType(_, _)).
 :- retractall(playerMoveGUI(_)).
+:- retractall(choiceAlgorithm(_)).
+:- retractall(hashmap(_)).
+:- retractall(timePlayer(_, _)).
 :- writeln('Chargement de alpha beta : ').
 :- [alpha_beta].
+:- writeln('Chargement de ids : ').
+:- [ids].
 :- writeln('Chargement des Heuristics : ').
 :- [heuristic_disk_diff].
 :- [heuristic_coin_parity].
@@ -50,6 +58,9 @@ init :-
 	retractall(depthPlayer(_, _)),
 	retractall(playerType(_, _)),
 	retractall(playerMoveGUI(_)),
+	retractall(choiceAlgorithm(_)),
+	retractall(hashmap(_)),
+	retractall(timePlayer(_, _)),
 	length(Board,64),
 	nth0(27,Board,'w'),
 	nth0(28,Board,'b'),
@@ -58,6 +69,11 @@ init :-
 	assertz(board(Board)),
 	writeln('Initialisation du board OK'),
 	configWindow.
+
+allTrace :-
+	trace(alpha_beta_ids),
+	trace(alpha_beta_vertical_ids),
+	trace(alpha_beta_horizontal_ids).
 
 %Playing turn
 %%if there is no winner, we made a normal turn for the next player
@@ -178,15 +194,34 @@ ia(Board, Player, Move) :-
 			random(0, Length, Index),
 			nth0(Index, List, Move)
 		);
+		choiceAlgorithm(A),
 		(
-			depthPlayer(Player, D),
-			switchPlayer(Player, Opponent),
-			getCopie(Board, BoardCopie),
-			assertz(playerini(-1, Opponent)),
-			assertz(playerini(1, Player)),
-			alpha_beta(BoardCopie, Move, D, 1),
-			retract(playerini(-1, Opponent)),
-			retract(playerini(1, Player))
+			A == alpha_beta ->
+			(
+				depthPlayer(Player, D),
+				switchPlayer(Player, Opponent),
+				getCopie(Board, BoardCopie),
+				assertz(playerini(-1, Opponent)),
+				assertz(playerini(1, Player)),
+				alpha_beta(BoardCopie, Move, D, 1),
+				retract(playerini(-1, Opponent)),
+				retract(playerini(1, Player))
+			) ;
+			(
+				timePlayer(Player, TimeMax),
+				switchPlayer(Player, Opponent),
+				getCopie(Board, BoardCopie),
+				retractall(hashmap(_)),
+				assertz(hashmap(_{})),
+				get_time(Time),
+				assertz(playerini(-1, Opponent)),
+				assertz(playerini(1, Player)),
+				countDisk(Board,0,0,B,W),
+				DepthMax is (64 - B - W),
+				ids(0,1,TimeMax,DepthMax,BoardCopie,1,_,Move,Time),
+				retract(playerini(-1, Opponent)),
+				retract(playerini(1, Player))
+			)
 		)
 	),
 	format('IA plays move number ~w ~n', [Move]).
@@ -243,6 +278,12 @@ displayRow([H|T],X) :- Y is X+1, display(H), displayRow(T,Y).
 display(Elem) :- var(Elem), write('_').
 display(Elem) :- write(Elem).
 
+%Get a copie of the board
 getCopie([],[]).
 getCopie([H|T],[H1|T1]):-var(H),var(H1),H1\==H,getCopie(T,T1).
 getCopie([H1|T1],[H1|T2]):- \+(var(H1)),getCopie(T1,T2).
+
+%Get a copie of the board with the special value o for the blank cases
+getBoardDisplay([],[]).
+getBoardDisplay([H|T],[H1|T1]):-var(H),H1=o,getBoardDisplay(T,T1).
+getBoardDisplay([H1|T1],[H1|T2]):- \+(var(H1)),getBoardDisplay(T1,T2).
